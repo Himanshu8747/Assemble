@@ -1,18 +1,23 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { CodeIcon, UsersIcon, MessageSquareIcon } from 'lucide-react';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { CodeIcon, UsersIcon, MessageSquareIcon } from "lucide-react";
 
-export function Hero() {
+interface HeroProps {
+  onGetStarted: () => void;
+}
+
+export default function Hero({ onGetStarted }: HeroProps) {
   return (
     <div className="py-20 text-center">
       <h1 className="text-5xl font-bold mb-6">
         Collaborate on Code in Real-Time
       </h1>
       <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-        A powerful platform for developers to code together, share ideas, and build amazing projects in real-time.
+        A powerful platform for developers to code together, share ideas, and
+        build amazing projects in real-time.
       </p>
       <div className="flex justify-center gap-4 mb-12">
-        <Button size="lg">
+        <Button size="lg" onClick={onGetStarted}>
           Get Started
         </Button>
         <Button variant="outline" size="lg">
@@ -40,7 +45,11 @@ export function Hero() {
   );
 }
 
-function FeatureCard({ icon, title, description }: {
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
   icon: React.ReactNode;
   title: string;
   description: string;
