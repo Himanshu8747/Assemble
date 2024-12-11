@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { GithubIcon, MenuIcon } from 'lucide-react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
-
 export function Header() {
   return (
     <header className="border-b">
@@ -19,9 +18,9 @@ export function Header() {
           <Button variant="ghost">Community</Button>
         </nav>
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="icon">
+          <a href="https://github.com/Himanshu8747/Assemble">
             <GithubIcon className="h-5 w-5" />
-          </Button>
+          </a>
           <SignedOut>
             <SignInButton />
           </SignedOut>
