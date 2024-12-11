@@ -267,7 +267,6 @@ export default function CodeEditor() {
               <div className="p-2">{renderFileStructure(fileStructure)}</div>
             </ScrollArea>
           </div>
-          {/* Resize Handle */}
           {sidebarOpen && (
             <div
               className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-border hover:bg-primary"
@@ -276,9 +275,7 @@ export default function CodeEditor() {
           )}
         </div>
 
-        {/* Main Content */}
         <div className="flex flex-1 flex-col">
-          {/* Toolbar */}
           <div className="flex items-center justify-between border-b p-2 bg-muted/40">
             <div className="flex items-center space-x-2">
               <Tooltip>
@@ -334,7 +331,6 @@ export default function CodeEditor() {
             </div>
           </div>
 
-          {/* Editor and Preview */}
           <Tabs defaultValue="editor" className="flex-1">
             <div className="flex h-full flex-col">
               <TabsList className="mx-2 mt-2 justify-start">
