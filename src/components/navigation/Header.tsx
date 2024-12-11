@@ -10,7 +10,7 @@ export function Header() {
           <Button variant="ghost" size="icon" className="md:hidden">
             <MenuIcon className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">Assemble</h1>
+          <a href='/' className="text-xl font-bold">Assemble</a>
         </div>
         <nav className="hidden md:flex items-center space-x-4">
           <Button variant="ghost">Features</Button>
