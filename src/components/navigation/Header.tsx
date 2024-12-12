@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { GithubIcon, MenuIcon } from 'lucide-react';
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import { Link } from 'react-router-dom';
 export function Header() {
   return (
@@ -21,12 +20,6 @@ export function Header() {
           <a href="https://github.com/Himanshu8747/Assemble">
             <GithubIcon className="h-5 w-5" />
           </a>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
         </div>
       </div>
     </header>
