@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { GithubIcon, MenuIcon } from 'lucide-react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-
+import { Link } from 'react-router-dom';
 export function Header() {
   return (
     <header className="border-b">
@@ -13,9 +13,9 @@ export function Header() {
           <a href='/' className="text-xl font-bold">Assemble</a>
         </div>
         <nav className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost">Features</Button>
-          <Button variant="ghost">Projects</Button>
-          <Button variant="ghost">Community</Button>
+          <Link to={'/features'}>Features</Link>
+          <Link to={'/'}>Projects</Link>
+          <Link to={'/'} >Community</Link>
         </nav>
         <div className="flex items-center space-x-4">
           <a href="https://github.com/Himanshu8747/Assemble">
