@@ -1,20 +1,19 @@
 'use client'
-import { useState } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import Hero from "./components/features/Hero";
-import CodeEditor from "./components/code-editor/editor";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Features from "./components/features/Features";
 
 function App() {
-  const [showEditor, setShowEditor] = useState(false);
-
   return (
-    <MainLayout>
-      {showEditor ? (
-        <CodeEditor />
-      ) : (
-        <Hero onGetStarted={() => setShowEditor(true)} />
-      )}
-    </MainLayout>
+    <BrowserRouter>
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Hero/>} />
+          <Route path="/features" element={<Features/>} />
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
   );
 }
 
