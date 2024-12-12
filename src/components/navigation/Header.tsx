@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { GithubIcon, MenuIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { GithubIcon, MenuIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 export function Header() {
   return (
     <header className="border-b">
@@ -9,15 +9,21 @@ export function Header() {
           <Button variant="ghost" size="icon" className="md:hidden">
             <MenuIcon className="h-5 w-5" />
           </Button>
-          <a href='/' className="text-xl font-bold">Assemble</a>
+          <Link to="/" className="text-xl font-bold">
+            Assemble
+          </Link>
         </div>
         <nav className="hidden md:flex items-center space-x-4">
-          <Link to={'/features'}>Features</Link>
-          <Link to={'/'}>Projects</Link>
-          <Link to={'/'} >Community</Link>
+          <Link to="/features">Features</Link>
+          <Link to="/projects">Projects</Link>
+          <Link to="/community">Community</Link>
         </nav>
         <div className="flex items-center space-x-4">
-          <a href="https://github.com/Himanshu8747/Assemble">
+          <a
+            href="https://github.com/Himanshu8747/Assemble"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <GithubIcon className="h-5 w-5" />
           </a>
         </div>
