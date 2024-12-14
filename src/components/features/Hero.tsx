@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Code2, Users } from 'lucide-react';
 import { motion } from "framer-motion";
-
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import { useNavigate } from "react-router-dom";
 export default function Hero() {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const navigate = useNavigate();
   return (
     <div className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-background to-secondary/20">
       <div className="absolute inset-0 w-full h-full dark:bg-grid-white/[0.2] bg-grid-black/[0.2] bg-[size:60px_60px] pointer-events-none" />
@@ -48,10 +52,11 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <Button size="lg" className="group">
+          {user && <Button size="lg" className="group" onClick={()=>navigate('/editor')}>
             Get Started
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Button>
+          </Button>}
+          
           <Button variant="outline" size="lg">
             Learn More
           </Button>
