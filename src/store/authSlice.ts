@@ -9,9 +9,10 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
+import { User } from '../types';
 
 interface AuthState {
-  user: FirebaseUser | null;
+  user: User | null;
   loading: boolean;
   error: string | null;
 }
@@ -22,13 +23,27 @@ const initialState: AuthState = {
   error: null,
 };
 
+const convertFirebaseUserToUser = (firebaseUser: FirebaseUser): User => {
+  const { uid, displayName, email, photoURL, ...otherProps } = firebaseUser;
+  return {
+    id: uid,
+    name: displayName || 'Anonymous',
+    email: email || '',
+    avatar: photoURL || 'https://api.dicebear.com/6.x/avataaars/svg?seed=Anonymous',
+    role: 'user', // Default role, you might want to fetch this from your database
+    skills: [], // Default empty skills array, you might want to fetch this from your database
+    github: '', // Default empty github, you might want to fetch this from your database
+    ...otherProps
+  };
+};
+
 // Async thunks
 export const signUp = createAsyncThunk(
   'auth/signUp',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      return convertFirebaseUserToUser(userCredential.user);
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -40,7 +55,7 @@ export const login = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      return convertFirebaseUserToUser(userCredential.user);
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -53,7 +68,7 @@ export const googleSignIn = createAsyncThunk(
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
-      return userCredential.user;
+      return convertFirebaseUserToUser(userCredential.user);
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -76,8 +91,8 @@ export const fetchUserOnAuthChange = createAsyncThunk(
   'auth/fetchUserOnAuthChange',
   async (_, { rejectWithValue }) => {
     try {
-      return new Promise<FirebaseUser | null>((resolve) => {
-        onAuthStateChanged(auth, (user) => resolve(user));
+      return new Promise<User | null>((resolve) => {
+        onAuthStateChanged(auth, (user) => resolve(user ? convertFirebaseUserToUser(user) : null));
       });
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -145,3 +160,4 @@ const authSlice = createSlice({
 });
 
 export default authSlice.reducer;
+
