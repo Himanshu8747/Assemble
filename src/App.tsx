@@ -5,7 +5,7 @@ import Features from "./components/features/Features";
 import { SignInSignUp } from "./components/auth/SignInSignUp";
 import CodeEditor from "./components/code-editor/editor";
 import { CommunityPage } from "./components/community/ComunityPage";
-import { ProjectsPage } from "./components/project/ProjectsPage";
+import { Projects } from "./components/projects/Projects";
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
           <Route path="/auth" element={<SignInSignUp/>} />
           <Route path="/editor" element={<CodeEditor/>} />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/projects" element={<ProjectsPage/>} />
+          <Route path="/projects" element={<Projects/>} />
         </Routes>
       </MainLayout>
     </BrowserRouter>
