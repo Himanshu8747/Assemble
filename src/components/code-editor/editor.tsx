@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PanelLeftOpen, PanelLeftClose, Plus, Trash2 } from 'lucide-react';
+import { PanelLeftOpen, PanelLeftClose, Plus} from 'lucide-react';
 import Editor from "@monaco-editor/react";
 
 import { Button } from "@/components/ui/button";
@@ -148,7 +148,7 @@ export default function CodeEditor() {
       title: "Item Added",
       description: `${newItemType === "file" ? "File" : "Folder"} "${newItemName}" has been added.`,
     });
-    setDialogOpen(false); // Close the dialog after adding the item
+    setDialogOpen(false);
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -225,7 +225,7 @@ export default function CodeEditor() {
         title: "Folder Uploaded",
         description: `Folder "${rootFolder.children[0].name}" has been uploaded successfully.`,
       });
-      setDialogOpen(false); // Close the dialog after uploading
+      setDialogOpen(false);
     }
   }, [toast]);
 
