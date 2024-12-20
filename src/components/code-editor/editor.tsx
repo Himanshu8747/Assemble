@@ -1,270 +1,326 @@
-'use client'
+"use client";
 
-import * as React from "react"
-import { Folder, FileIcon, PanelLeftOpen, PanelLeftClose, Plus, Trash2, ChevronRight, ChevronDown } from 'lucide-react'
-import Editor from "@monaco-editor/react"
+import * as React from "react";
+import { PanelLeftOpen, PanelLeftClose, Plus, Trash2 } from 'lucide-react';
+import Editor from "@monaco-editor/react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { File, initialFileStructure, getLanguageFromFile, addItem, deleteItem } from "@/lib/file-utils"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import {
+  File,
+  initialFileStructure,
+  getLanguageFromFile,
+  addItem,
+  deleteItem,
+  moveItem,
+} from "@/lib/file-utils";
+import FileStructure from "./file-structure";
+
+declare module 'react' {
+  interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+    webkitdirectory?: string;
+  }
+}
 
 export default function CodeEditor() {
-  const [code, setCode] = React.useState<string>("")
-  const [language, setLanguage] = React.useState("javascript")
-  const [theme, setTheme] = React.useState<"vs-dark" | "light">("vs-dark")
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
-  const [fileStructure, setFileStructure] = React.useState<File[]>(initialFileStructure)
-  const [sidebarOpen, setSidebarOpen] = React.useState(true)
-  const [sidebarWidth, setSidebarWidth] = React.useState(256)
-  const [newItemName, setNewItemName] = React.useState("")
-  const [newItemType, setNewItemType] = React.useState<"file" | "folder">("file")
-  const [selectedItemId, setSelectedItemId] = React.useState<string | null>(null)
-  const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(new Set())
+  const [code, setCode] = React.useState<string>("");
+  const [language, setLanguage] = React.useState("javascript");
+  const [theme, setTheme] = React.useState<"vs-dark" | "light">("vs-dark");
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [fileStructure, setFileStructure] = React.useState<File[]>(initialFileStructure);
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [sidebarWidth, setSidebarWidth] = React.useState(256);
+  const [newItemName, setNewItemName] = React.useState("");
+  const [newItemType, setNewItemType] = React.useState<"file" | "folder">("file");
+  const [selectedItemId, setSelectedItemId] = React.useState<string | null>(null);
+  const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(new Set());
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [dialogOpen, setDialogOpen] = React.useState(false); // Added state for dialog
 
-  const sidebarRef = React.useRef<HTMLDivElement>(null)
-  const [dragging, setDragging] = React.useState(false)
-  const [startX, setStartX] = React.useState(0)
+  const { toast } = useToast();
+
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
 
   const startDrag = (e: React.MouseEvent) => {
-    setDragging(true)
-    setStartX(e.clientX)
-  }
+    setDragging(true);
+    setStartX(e.clientX);
+  };
 
   const handleDrag = (e: MouseEvent) => {
-    if (!dragging) return
-    const delta = e.clientX - startX
-    setSidebarWidth((prevWidth) => Math.max(prevWidth + delta, 200))
-    setStartX(e.clientX)
-  }
+    if (!dragging) return;
+    const delta = e.clientX - startX;
+    setSidebarWidth((prevWidth) => Math.max(prevWidth + delta, 200));
+    setStartX(e.clientX);
+  };
 
   const stopDrag = () => {
-    setDragging(false)
-  }
+    setDragging(false);
+  };
 
   React.useEffect(() => {
     if (dragging) {
-      window.addEventListener("mousemove", handleDrag)
-      window.addEventListener("mouseup", stopDrag)
+      window.addEventListener("mousemove", handleDrag);
+      window.addEventListener("mouseup", stopDrag);
     } else {
-      window.removeEventListener("mousemove", handleDrag)
-      window.removeEventListener("mouseup", stopDrag)
+      window.removeEventListener("mousemove", handleDrag);
+      window.removeEventListener("mouseup", stopDrag);
     }
     return () => {
-      window.removeEventListener("mousemove", handleDrag)
-      window.removeEventListener("mouseup", stopDrag)
-    }
-  }, [dragging])
+      window.removeEventListener("mousemove", handleDrag);
+      window.removeEventListener("mouseup", stopDrag);
+    };
+  }, [dragging]);
 
   const handleEditorChange = (value: string | undefined) => {
-    setCode(value || "")
-  }
+    setCode(value || "");
+    if (selectedFile) {
+      setFileStructure((prev) =>
+        prev.map((file) =>
+          file.id === selectedFile.id ? { ...file, content: value || "" } : file
+        )
+      );
+    }
+  };
 
   const handleFileClick = (file: File) => {
     if (file.type === "file") {
-      setCode(file.content || "")
-      setSelectedFile(file)
-      const languageFromFile = getLanguageFromFile(file.name)
-      setLanguage(languageFromFile)
+      setCode(file.content || "");
+      setSelectedFile(file);
+      const languageFromFile = getLanguageFromFile(file.name);
+      setLanguage(languageFromFile);
     }
-  }
+  };
 
   const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev)
-  }
+    setSidebarOpen((prev) => !prev);
+  };
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev);
       if (newSet.has(folderId)) {
-        newSet.delete(folderId)
+        newSet.delete(folderId);
       } else {
-        newSet.add(folderId)
+        newSet.add(folderId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const handleAddItem = () => {
-    if (!newItemName) return
-    const newItem: Omit<File, "id"> = {
+    if (!newItemName) return;
+    const newItem: Omit<File, "id" | "path" | "children"> = {
       name: newItemName,
       type: newItemType,
       content: newItemType === "file" ? "" : undefined,
-      children: newItemType === "folder" ? [] : undefined,
-    }
-    setFileStructure((prev) => addItem(prev, selectedItemId, newItem))
-    setNewItemName("")
-    setSelectedItemId(null)
-  }
+    };
+    setFileStructure((prev) => addItem(prev, selectedItemId, newItem));
+    setNewItemName("");
+    setSelectedItemId(null);
+    toast({
+      title: "Item Added",
+      description: `${newItemType === "file" ? "File" : "Folder"} "${newItemName}" has been added.`,
+    });
+    setDialogOpen(false); // Close the dialog after adding the item
+  };
 
   const handleDeleteItem = (itemId: string) => {
-    setFileStructure((prev) => deleteItem(prev, itemId))
+    setFileStructure((prev) => {
+      const updatedStructure = deleteItem(prev, itemId);
+      const deletedItem = prev.find(item => item.id === itemId) || prev.flatMap(item => item.children).find(child => child?.id === itemId);
+      if (deletedItem) {
+        toast({
+          title: "Item Deleted",
+          description: `${deletedItem.type === "file" ? "File" : "Folder"} "${deletedItem.name}" has been deleted.`,
+        });
+      }
+      return updatedStructure;
+    });
     if (selectedFile && selectedFile.id === itemId) {
-      setSelectedFile(null)
-      setCode("")
+      setSelectedFile(null);
+      setCode("");
     }
-  }
+  };
 
-  const renderFileStructure = (files: File[], depth = 0) => {
-    return files.map((file) => (
-      <div key={file.id} style={{ paddingLeft: `${depth * 16}px` }}>
-        <div className="flex items-center space-x-2 py-1">
-          {file.type === "folder" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4 p-0"
-              onClick={() => toggleFolder(file.id)}
-            >
-              {expandedFolders.has(file.id) ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          )}
-          {file.type === "folder" ? (
-            <Folder className="h-4 w-4 text-blue-500" />
-          ) : (
-            <FileIcon className="h-4 w-4 text-gray-500" />
-          )}
-          <span
-            className={`flex-grow cursor-pointer ${
-              file.type === "file" ? "hover:underline" : ""
-            }`}
-            onClick={() => file.type === "file" && handleFileClick(file)}
-          >
-            {file.name}
-          </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 p-0">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onSelect={() => {
-                setSelectedItemId(file.id)
-                setNewItemType("file")
-              }}>
-                Add File
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => {
-                setSelectedItemId(file.id)
-                setNewItemType("folder")
-              }}>
-                Add Folder
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 p-0"
-            onClick={() => handleDeleteItem(file.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-        {file.type === "folder" && expandedFolders.has(file.id) && file.children && (
-          <div className="pl-4">
-            {renderFileStructure(file.children, depth + 1)}
-          </div>
-        )}
-      </div>
-    ))
-  }
+  const handleDrop = (draggedId: string, targetId: string | null) => {
+    setFileStructure((prev) => moveItem(prev, draggedId, targetId));
+  };
+
+  const handleFolderUpload = React.useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setIsUploading(true);
+      const rootFolder: File = { id: 'root', name: 'root', type: 'folder', path: '', children: [] };
+      const fileReadPromises: Promise<void>[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const path = file.webkitRelativePath;
+        const pathParts = path.split('/');
+        let currentNode = rootFolder;
+
+        for (let j = 0; j < pathParts.length; j++) {
+          const name = pathParts[j];
+          const currentPath = '/' + pathParts.slice(0, j + 1).join('/');
+          let childNode = currentNode.children.find((child) => child.name === name);
+
+          if (!childNode) {
+            childNode = { 
+              id: `${currentNode.id}-${name}`, 
+              name, 
+              type: j === pathParts.length - 1 ? 'file' : 'folder', 
+              path: currentPath,
+              children: [],
+              content: j === pathParts.length - 1 ? '' : undefined
+            };
+            currentNode.children.push(childNode);
+
+            if (childNode.type === 'file') {
+              const fileReadPromise = new Promise<void>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  childNode!.content = e.target?.result as string;
+                  resolve();
+                };
+                reader.readAsText(file);
+              });
+              fileReadPromises.push(fileReadPromise);
+            }
+          }
+          currentNode = childNode;
+        }
+      }
+
+      await Promise.all(fileReadPromises);
+      setFileStructure((prev) => [...prev, ...rootFolder.children]);
+      setIsUploading(false);
+      toast({
+        title: "Folder Uploaded",
+        description: `Folder "${rootFolder.children[0].name}" has been uploaded successfully.`,
+      });
+      setDialogOpen(false); // Close the dialog after uploading
+    }
+  }, [toast]);
 
   return (
     <TooltipProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        {/* Sidebar */}
         <div
           ref={sidebarRef}
           className={`h-full bg-muted transition-all duration-300 ease-in-out ${
-            sidebarOpen ? 'w-[256px] border-r' : 'w-0'
+            sidebarOpen ? "w-[256px] border-r" : "w-0"
           }`}
           style={{
-            width: sidebarOpen ? `${sidebarWidth}px` : '0px',
+            width: sidebarOpen ? `${sidebarWidth}px` : "0px",
           }}
         >
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between p-2 border-b">
               {sidebarOpen ? (
-              <>
-              <h2 className="text-sm font-semibold">File Explorer</h2>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Item</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        Name
-                      </Label>
-                      <Input
-                        id="name"
-                        value={newItemName}
-                        onChange={(e) => setNewItemName(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="type" className="text-right">
-                        Type
-                      </Label>
-                      <Select
-                        value={newItemType}
-                        onValueChange={(value: "file" | "folder") => setNewItemType(value)}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="file">File</SelectItem>
-                          <SelectItem value="folder">Folder</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <Button onClick={handleAddItem}>Add Item</Button>
-                </DialogContent>
-              </Dialog>
-              </>
-              ) : null }
+                <>
+                  <h2 className="text-sm font-semibold">File Explorer</h2>
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}> {/* Updated Dialog */}
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Item</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="name"
+                            value={newItemName}
+                            onChange={(e) => setNewItemName(e.target.value)}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="type" className="text-right">
+                            Type
+                          </Label>
+                          <Select
+                            value={newItemType}
+                            onValueChange={(value: "file" | "folder") =>
+                              setNewItemType(value)
+                            }
+                          >
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="file">File</SelectItem>
+                              <SelectItem value="folder">Folder</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="folder-upload" className="text-right">
+                            Upload Folder
+                          </Label>
+                          <Input
+                            id="folder-upload"
+                            type="file"
+                            onChange={handleFolderUpload}
+                            webkitdirectory="true"
+                            multiple
+                            className="col-span-3"
+                            disabled={isUploading}
+                          />
+                        </div>
+                      </div>
+                      <Button onClick={handleAddItem} disabled={isUploading}>
+                        {isUploading ? "Uploading..." : "Add Item"}
+                      </Button>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              ) : null}
             </div>
-            <ScrollArea className="flex-1">
-              <div className="p-2">{renderFileStructure(fileStructure)}</div>
+            <ScrollArea className="flex-1 bg-gray-950 text-white">
+              <div className="p-2 ">
+                <FileStructure
+                  fileStructure={fileStructure}
+                  expandedFolders={expandedFolders}
+                  handleFileClick={handleFileClick}
+                  toggleFolder={toggleFolder}
+                  handleDeleteItem={handleDeleteItem}
+                  handleDrop={handleDrop}
+                />
+              </div>
             </ScrollArea>
           </div>
           {sidebarOpen && (
@@ -276,7 +332,7 @@ export default function CodeEditor() {
         </div>
 
         <div className="flex flex-1 flex-col">
-          <div className="flex items-center justify-between border-b p-2 bg-muted/40">
+          <div className="flex items-center justify-between border-b p-2">
             <div className="flex items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -303,7 +359,7 @@ export default function CodeEditor() {
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 bg-gray">
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-[130px] h-8">
                   <SelectValue placeholder="Select language" />
@@ -333,7 +389,7 @@ export default function CodeEditor() {
 
           <Tabs defaultValue="editor" className="flex-1">
             <div className="flex h-full flex-col">
-              <TabsList className="mx-2 mt-2 justify-start">
+              <TabsList className="mx-2 mt-2 justify-start bg-gray-950 text-white">
                 <TabsTrigger value="editor">Editor</TabsTrigger>
                 <TabsTrigger value="preview">Preview</TabsTrigger>
               </TabsList>
@@ -365,8 +421,12 @@ export default function CodeEditor() {
                               font-family: Arial, sans-serif; 
                               margin: 0; 
                               padding: 1em;
-                              background-color: ${theme === 'vs-dark' ? '#1e1e1e' : '#ffffff'};
-                              color: ${theme === 'vs-dark' ? '#ffffff' : '#000000'};
+                              background-color: ${
+                                theme === "vs-dark" ? "#1e1e1e" : "#ffffff"
+                              };
+                              color: ${
+                                theme === "vs-dark" ? "#ffffff" : "#000000"
+                              };
                             }
                           </style>
                         </head>
@@ -393,8 +453,9 @@ export default function CodeEditor() {
             </div>
           </Tabs>
         </div>
+      <Toaster />
       </div>
     </TooltipProvider>
-  )
+  );
 }
 

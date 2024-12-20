@@ -90,7 +90,7 @@ const FileStructure: React.FC<FileStructureProps> = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                className="h-6 w-6 opacity-100 text-white hover:bg-red-500 hover:text-white"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteItem(item.id);
@@ -112,7 +112,7 @@ const FileStructure: React.FC<FileStructureProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100"
+              className="h-6 w-6 opacity-100 text-white hover:bg-red-500 hover:text-white"
               onClick={(e) => {
                 e.stopPropagation();
                 handleDeleteItem(item.id);
@@ -137,3 +137,4 @@ const FileStructure: React.FC<FileStructureProps> = ({
 };
 
 export default FileStructure;
+
