@@ -29,6 +29,7 @@ export function Header() {
           <Link to="/" className="text-xl font-bold">Assemble</Link>
         </div>
         <nav className="hidden md:flex items-center space-x-4">
+          {user && <Link to='/editor'>Code Editor</Link>}
           <Link to="/features">Features</Link>
           <Link to="/projects">Projects</Link>
           <Link to="/community">Community</Link>
