@@ -1,39 +1,48 @@
-import { User as FirebaseUser } from 'firebase/auth';
-
-export interface User extends Partial<FirebaseUser> {
+export interface User {
   id: string;
+  email?: string;
   name: string;
-  email: string;
   avatar: string;
-  role?: string;
-  skills?: string[];
-  github?: string;
+  role: string;
+  skills: string[];
+  contributions: number;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  tech: string[];
+  owner: User;
+  collaborators: User[];
+  stars: number;
+  progress: number;
+  githubUrl: string;
+  recentActivity: string[];
+  upcomingMilestones: string[];
 }
 
 export interface Comment {
   id: string;
-  author: User;
   content: string;
-  createdAt: Date;
+  author: User;
+  createdAt: string;
 }
 
 export interface Idea {
   id: string;
   title: string;
   description: string;
-  email: string;
+  author: User;
   likes: number;
   comments: Comment[];
-  createdAt: Date;
+  tags: string[];
+  likedBy: string[];
 }
 
-export interface NewIdeaFormData {
-  title: string;
-  description: string;
+export interface Message {
+  id: string;
+  user: User;
+  content: string;
+  timestamp: string;
 }
-
-export interface IdeaBoardProps {
-  initialIdeas: Idea[];
-  currentUser: User;
-}
-
