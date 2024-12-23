@@ -62,6 +62,16 @@ export const ideas: Idea[] = [
     comments: [],
     tags: ['ai', 'code-review', 'automation'],
     likedBy: ['1']
+  },
+  {
+    id: '3',
+    title: 'AI Code Review Assistant',
+    description: 'Automated code review tool powered by machine learning',
+    author: users[1],
+    likes: 38,
+    comments: [],
+    tags: ['ai', 'code-review', 'automation'],
+    likedBy: ['1']
   }
 ];
 
