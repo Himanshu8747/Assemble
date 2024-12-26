@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import { projects } from '../../data/dummyData';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "./../ui/input";
+import { Label } from "./../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./../ui/select";
 
 export function Projects() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,7 +48,7 @@ export function Projects() {
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}

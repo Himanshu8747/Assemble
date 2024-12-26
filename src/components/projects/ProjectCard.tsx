@@ -1,27 +1,32 @@
-import { Project } from '../../types/index';
-import { Star, Users, GitFork, Copy, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Link } from 'react-router-dom';
+import { Project } from '../../types';
+import { Star, Users, GitFork, Copy} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "./../ui/avatar";
+import { Button } from "./../ui/button";
+import { Progress } from "./../ui/progress";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "./../ui/tooltip";
+import { Badge } from "./../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "./../ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProjectCardProps {
   project: Project;
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const { toast } = useToast();
 
   const handleClone = () => {
     navigator.clipboard.writeText(`git clone ${project.githubUrl}`);
+    toast({
+      title: "Repository URL Copied!",
+      description: `The clone URL for ${project.title} has been copied to your clipboard.`,
+    });
   };
 
   const handleFork = () => {
@@ -34,12 +39,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <div className="flex justify-between items-start">
           <CardTitle className="text-2xl font-bold text-gray-800 dark:text-white">{project.title}</CardTitle>
           <div className="flex items-center space-x-1 bg-yellow-100 dark:bg-yellow-900 rounded-full px-3 py-1">
-          <Button variant="link" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200" asChild>
-            <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
-              View on GitHub
-              <ExternalLink className="w-4 h-4 ml-2" />
-            </a>
-          </Button>
             <Star className="w-4 h-4 text-yellow-500" />
             <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">{project.stars}</span>
           </div>
@@ -111,48 +110,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
         </div>
 
-        {expanded && (
-          <div className="mt-4 space-y-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <div>
-              <h4 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">Recent Activity</h4>
-              <ul className="space-y-2 list-disc list-inside">
-                {project.recentActivity.map((activity, index) => (
-                  <li key={index} className="text-sm text-gray-600 dark:text-gray-300">
-                    {activity}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">Upcoming Milestones</h4>
-              <ul className="space-y-2 list-disc list-inside">
-                {project.upcomingMilestones.map((milestone, index) => (
-                  <li key={index} className="text-sm text-gray-600 dark:text-gray-300">
-                    {milestone}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
         <Button
           variant="ghost"
           size="sm"
           className="w-full mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
-          onClick={() => setExpanded(!expanded)}
+          asChild
         >
-          {expanded ? (
-            <>
-              <ChevronUp className="w-4 h-4 mr-2" />
-              Show Less
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-4 h-4 mr-2" />
-              Show More
-            </>
-          )}
+          <Link to={`/projects/${project.id}`}>
+            View Details
+          </Link>
         </Button>
       </CardContent>
     </Card>
