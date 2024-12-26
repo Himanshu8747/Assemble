@@ -13,13 +13,16 @@ export interface Project {
   title: string;
   description: string;
   tech: string[];
-  owner: User;
-  collaborators: User[];
   stars: number;
   progress: number;
   githubUrl: string;
+  collaborators: string[];
   recentActivity: string[];
   upcomingMilestones: string[];
+}
+
+export interface ProjectsState {
+  projects: Project[];
 }
 
 export interface Comment {
