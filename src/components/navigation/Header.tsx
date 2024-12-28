@@ -33,6 +33,7 @@ export function Header() {
           <Link to="/features">Features</Link>
           <Link to="/projects">Projects</Link>
           <Link to="/community">Community</Link>
+          <Link to="/chatBoard">Chat</Link>
         </nav>
         <div className="flex items-center space-x-4">
           <a href="https://github.com/Himanshu8747/Assemble" target="_blank" rel="noopener noreferrer">
