@@ -49,3 +49,16 @@ export interface Message {
   content: string;
   timestamp: string;
 }
+
+export interface ChatUser extends User {
+  isOnline?: boolean;
+  lastSeen?: string;
+  isConnected?: boolean;
+}
+
+export interface EnhancedMessage extends Message {
+  recipientId?: string;
+  isPrivate?: boolean;
+  reactions?: { [key: string]: string[] };
+}
+
