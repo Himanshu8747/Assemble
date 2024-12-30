@@ -5,7 +5,10 @@ export interface User {
   avatar: string;
   role: string;
   skills: string[];
-  contributions: number;
+  contributions?: number;
+  team?: string;
+  status?: string; 
+  github?: string;
 }
 
 export interface Project {
