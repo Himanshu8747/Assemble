@@ -7,31 +7,42 @@ import CodeEditor from "./components/code-editor/editor";
 import { CommunityPage } from "./components/community/ComunityPage";
 import { Projects } from "./components/projects/Projects";
 import { ProjectDetails } from "./components/projects/ProjectDetails";
-import EnhancedLiveChat from "./components/community/EnhancedLiveChat";
 import { useSelector } from "react-redux";
 import { RootState } from "./store/store";
 import { ProtectedRoute } from "./components/ProtectedRoute/ProtectedRoute";
+import LiveChat from "./components/chat/LiveChat";
+
 function App() {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.users.currentUser);
+
   return (
     <BrowserRouter>
       <MainLayout>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Hero />} />
           <Route path="/features" element={<Features />} />
           <Route path="/auth" element={<SignInSignUp />} />
-          <Route path="/editor" element={<CodeEditor />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/projects" element={<Projects />} />
-          <Route 
-            path="/chatBoard" 
-            element={
-              <ProtectedRoute>
-                <EnhancedLiveChat currentUser={user!} />
-              </ProtectedRoute>
-            } 
-          />
           <Route path="/projects/:projectId" element={<ProjectDetails />} />
+
+          <Route
+            path="/editor"
+            element={
+              <ProtectedRoute isAuthenticated={!!user}>
+                <CodeEditor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chatBoard"
+            element={
+              <ProtectedRoute isAuthenticated={!!user}>
+                <LiveChat currentUser={user!} />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </MainLayout>
     </BrowserRouter>
@@ -39,4 +50,3 @@ function App() {
 }
 
 export default App;
-
