@@ -1,17 +1,16 @@
-import { Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
-  children: React.ReactElement;
+  isAuthenticated: boolean;
+  children: React.ReactNode;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const user = useSelector((state: RootState) => state.auth.user);
-
-  if (!user) {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  isAuthenticated,
+  children,
+}) => {
+  if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
-
-  return children;
+  return <>{children}</>;
 };
