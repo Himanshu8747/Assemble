@@ -20,7 +20,7 @@ const currentUser: User = {
 
 export function IdeaBoard({ ideas: initialIdeas }: IdeaBoardProps) {
   const [ideas, setIdeas] = useState<Idea[]>(initialIdeas);
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.users.currentUser);
 
   const handleLike = (ideaId: string) => {
     setIdeas(
@@ -89,7 +89,7 @@ export function IdeaBoard({ ideas: initialIdeas }: IdeaBoardProps) {
   };
 
   return (
-    <div className="w-full">
+    <div className="text-2xl font-bold text-gray-900 dark:text-white w-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Idea Board</h2>
         <NewIdeaDialog onSubmit={handleNewIdea} currentUser={currentUser} />

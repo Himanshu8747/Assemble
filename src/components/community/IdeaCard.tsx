@@ -26,18 +26,18 @@ export function IdeaCard({
   const isLiked = idea.likedBy.includes(currentUser.id);
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
       <CardHeader>
-        <CardTitle>{idea.title}</CardTitle>
+        <CardTitle className="text-gray-900 dark:text-white">{idea.title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-500 mb-2">{idea.description}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{idea.description}</p>
         
         <div className="flex flex-wrap gap-2 mb-4">
           {idea.tags.map((tag) => (
             <span
               key={tag}
-              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+              className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
             >
               {tag}
             </span>
@@ -50,7 +50,7 @@ export function IdeaCard({
               <AvatarImage src={idea.author.avatar} alt={idea.author.name} />
               <AvatarFallback>{idea.author.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium">{idea.author.name}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">{idea.author.name}</span>
           </div>
           <div className="flex items-center space-x-4">
             <Button
@@ -59,13 +59,13 @@ export function IdeaCard({
               onClick={() => onLike(idea.id)}
               className={cn(
                 "transition-colors duration-200",
-                isLiked && "text-black"
+                isLiked ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"
               )}
             >
               <ThumbsUp 
                 className={cn(
                   "w-4 h-4 mr-1 transition-colors duration-200",
-                  isLiked ? "fill-blue-500" : "stroke-current"
+                  isLiked ? "fill-blue-500 dark:fill-blue-400" : "stroke-current"
                 )}
               />
               <span>{idea.likes}</span>
@@ -74,7 +74,7 @@ export function IdeaCard({
               variant="ghost"
               size="sm"
               onClick={() => setShowComments(!showComments)}
-              className="flex items-center"
+              className="flex items-center text-gray-500 dark:text-gray-400"
             >
               <MessageSquare className="w-4 h-4 mr-1" />
               <span>{idea.comments.length}</span>
@@ -95,3 +95,4 @@ export function IdeaCard({
     </Card>
   );
 }
+
