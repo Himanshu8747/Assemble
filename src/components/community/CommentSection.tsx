@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Comment, User } from '../../types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Trash2 } from 'lucide-react';
+import { Input } from '../ui/input';
 
 interface CommentSectionProps {
   comments: Comment[];
@@ -31,7 +31,7 @@ export function CommentSection({
   return (
     <div className="mt-4 space-y-4">
       {comments.map((comment) => (
-        <div key={comment.id} className="flex space-x-3 bg-gray-50 p-3 rounded">
+        <div key={comment.id} className="flex space-x-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
           <Avatar>
             <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
             <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
@@ -39,8 +39,8 @@ export function CommentSection({
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
-                <span className="font-medium">{comment.author.name}</span>
-                <span className="text-xs text-gray-500 ml-2">
+                <span className="font-medium text-gray-900 dark:text-white">{comment.author.name}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
                   {new Date(comment.createdAt).toLocaleDateString()}
                 </span>
               </div>
@@ -50,24 +50,25 @@ export function CommentSection({
                   size="sm"
                   onClick={() => onDeleteComment(ideaId, comment.id)}
                 >
-                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                 </Button>
               )}
             </div>
-            <p className="text-sm mt-1">{comment.content}</p>
+            <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">{comment.content}</p>
           </div>
         </div>
       ))}
 
       <div className="flex gap-2">
-        <Textarea
+        <Input
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Add a comment..."
-          className="flex-1"
+          className="flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         />
         <Button onClick={handleSubmit}>Comment</Button>
       </div>
     </div>
   );
 }
+
