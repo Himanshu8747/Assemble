@@ -1,27 +1,32 @@
 import React, { useState, useEffect, useRef } from "react";
-import { User, Message } from "../../types";
+import { User, Message, FileAttachment } from "../../types";
 import {
   Send,
   Search,
   Phone,
   Video,
   MoreHorizontal,
-  Paperclip,
   Hash,
   Smile,
-  Settings,
-  Image as ImageIcon
+  Settings
 } from "react-feather";
 import ProfileSetting from "./ProfileSetting";
 import StatusTeam from "./StatusTeam";
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { FilePreview } from "./FilePreview";
+import { MessageAttachment } from "./MessageAttachment";
+import { Toaster } from "@/components/ui/toaster"
+import { FileInput } from "./FileInput"
+import { useToast } from "@/hooks/use-toast"
 
 interface ChatUser extends User {
   isOnline?: boolean;
   lastSeen?: string;
   status?: string;
 }
+
 
 export default function LiveChat({ currentUser }: { currentUser: User }) {
   const [activeUsers, setActiveUsers] = useState<ChatUser[]>([
@@ -98,6 +103,15 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
+  const documentInputRef = useRef<HTMLInputElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const [selectedDocument, setSelectedDocument] = useState<File | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { toast } = useToast()
+
   const handleStatusChange = (newStatus: string) => {
     setCurrentUserStatus(newStatus);
     // Here you would typically update the user's status on the server
@@ -132,19 +146,37 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
     };
   }, []);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && selectedFiles.length === 0) return;
+
+    const fileAttachments: FileAttachment[] = await Promise.all(
+      selectedFiles.map(async (file) => {
+        // In a real application, you would upload the file to a server here
+        // and get back a URL. For this example, we'll use a fake URL.
+        const fakeUrl = URL.createObjectURL(file);
+        return {
+          name: file.name,
+          type: file.type,
+          url: fakeUrl
+        };
+      })
+    );
 
     const message: Message = {
       id: Date.now().toString(),
       user: currentUser,
       content: newMessage,
       timestamp: new Date().toISOString(),
+      files: fileAttachments
     };
 
     setMessages([...messages, message]);
     setNewMessage("");
+    setSelectedFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
@@ -157,6 +189,34 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
 
   const toggleEmojiPicker = () => {
     setShowEmojiPicker(!showEmojiPicker);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(files)]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+
+  const handleDocumentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedDocument(file);
+    }
+  };
+
+  const handleMediaSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+      setSelectedMedia(file);
+    } else {
+      alert('Please select an image or video file.');
+    }
   };
 
   return (
@@ -179,7 +239,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
           <div className="p-2">
             <div className="mb-4">
               <h3 className="px-3 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">
-                TEAMS
+                CHANNELS
               </h3>
               <button className="w-full text-left px-3 py-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <Hash className="w-4 h-4 inline mr-2" />
@@ -241,10 +301,12 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
             </Avatar>
             <div className="flex-1">
               <div className="text-sm font-medium dark:text-white">
-                {/* {currentUser.email?.length ?? 0 > 15
+                {currentUser.email?.length ?? 0 > 15
                   ? currentUser.email?.substring(0, 15) + "..."
-                  : currentUser.email} */}
-                  {currentUser.name}
+                  : currentUser.email}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {currentUser.role}
               </div>
             </div>
             <button
@@ -316,6 +378,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
               const showAvatar =
                 index === 0 || messages[index - 1].user.id !== message.user.id;
               const isCurrentUser = message.user.id === currentUser.id;
+
               return (
                 <div
                   key={message.id}
@@ -329,9 +392,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
                       <AvatarFallback>{message.user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   )}
-                  <div
-                    className={`flex-1 ${isCurrentUser ? "text-right" : ""}`}
-                  >
+                  <div className={`flex-1 ${isCurrentUser ? "text-right" : ""}`}>
                     {showAvatar && (
                       <div className="flex items-baseline space-x-2 mb-1">
                         <span className="font-medium text-sm dark:text-white">
@@ -346,13 +407,16 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
                       </div>
                     )}
                     <div
-                      className={`inline-block rounded-lg px-4 py-2 max-w-[80%] ${
+                      className={`inline-block rounded-lg px-4 py-2 ${
                         isCurrentUser
-                          ? "bg-blue-500 text-white"
+                          ? "bg-gray-100 text-black dark:bg-gray-800 dark:text-white"
                           : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
                       }`}
                     >
-                      <p>{message.content}</p>
+                      {message.content && <p>{message.content}</p>}
+                      {message.files?.map((file, index) => (
+                        <MessageAttachment key={index} file={file} />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -365,34 +429,50 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
         {/* Message Input */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <form onSubmit={handleSendMessage}>
+            <FilePreview files={selectedFiles} onRemove={removeFile} />
             <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
               <div className="flex items-center space-x-1">
-                <button
-                  type="button"
-                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => setIsAttaching(!isAttaching)}
-                >
-                  <Paperclip className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </button>
-                <button
-                  type="button"
-                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <ImageIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </button>
+                <FileInput
+                  type="document"
+                  inputRef={documentInputRef}
+                  onFileSelect={(files) => {
+                    if (files) {
+                      setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(files)])
+                      toast({
+                        title: "Files added",
+                        description: `${files.length} document(s) added to your message`
+                      })
+                    }
+                  }}
+                />
+                <FileInput
+                  type="media"
+                  inputRef={mediaInputRef}
+                  onFileSelect={(files) => {
+                    if (files) {
+                      setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(files)])
+                      toast({
+                        title: "Files added",
+                        description: `${files.length} media file(s) added to your message`
+                      })
+                    }
+                  }}
+                />
                 <div className="relative">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     ref={emojiButtonRef}
-                    className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    className="hover:bg-gray-200 dark:hover:bg-gray-700"
                     onClick={toggleEmojiPicker}
                   >
                     <Smile className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  </button>
+                  </Button>
                   {showEmojiPicker && (
                     <div
                       ref={emojiPickerRef}
-                      className="absolute bottom-full right-0 mb-2"
+                      className="absolute bottom-full right-0 mb-2 z-50"
                     >
                       <EmojiPicker
                         onEmojiClick={handleEmojiClick}
@@ -412,13 +492,13 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
                 placeholder="Type your message..."
                 className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
-              <button
+              <Button
                 type="submit"
-                className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!newMessage.trim()}
+                disabled={!newMessage.trim() && selectedFiles.length === 0}
+                className="bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -435,6 +515,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
         onStatusChange={handleStatusChange}
         onTeamChange={handleTeamChange}
       />
+      <Toaster />
     </div>
   );
 }
