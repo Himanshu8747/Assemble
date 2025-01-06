@@ -45,12 +45,18 @@ export interface Idea {
   tags: string[];
   likedBy: string[];
 }
+export interface FileAttachment {
+  name: string;
+  type: string;
+  url: string;
+}
 
 export interface Message {
   id: string;
-  user: User;
   content: string;
+  user: User;
   timestamp: string;
+  files?: FileAttachment[];
 }
 
 export interface ChatUser extends User {
