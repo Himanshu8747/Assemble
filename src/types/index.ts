@@ -71,3 +71,9 @@ export interface EnhancedMessage extends Message {
   reactions?: { [key: string]: string[] };
 }
 
+export interface Channel {
+  id: string;
+  name: string;
+  ownerId: string;
+}
+
