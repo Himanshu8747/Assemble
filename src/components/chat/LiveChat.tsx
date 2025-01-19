@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { User, Message, FileAttachment,ChatUser, Channel} from "../../types";
-import { Send, Search, Phone, Video, MoreHorizontal,Hash, Smile, Settings,} from 'lucide-react';
+import { Send, Search, Phone, Video, MoreHorizontal, Hash, Smile, Settings, X } from 'lucide-react';
 import ProfileSetting from "./ProfileSetting";
 import StatusTeam from "./StatusTeam";
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
@@ -19,6 +19,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
     {
       id: "1",
       name: "Alice Cooper",
+      email: "alice@example.com",
       avatar: "https://i.pravatar.cc/150?u=alice",
       role: "Senior Developer",
       skills: ["React", "Node.js"],
@@ -29,6 +30,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
     {
       id: "2",
       name: "Bob Wilson",
+      email: "bob@example.com",
       avatar: "https://i.pravatar.cc/150?u=bob",
       role: "UI Designer",
       skills: ["UI/UX", "Figma"],
@@ -39,6 +41,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
     {
       id: "3",
       name: "Carol Smith",
+      email: "carol@example.com",
       avatar: "https://i.pravatar.cc/150?u=carol",
       role: "Developer",
       skills: ["Python", "React"],
@@ -52,21 +55,38 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hey team, hows the new feature coming along?",
+      content: "Hey team, how's the new feature coming along?",
       user: activeUsers[0],
       timestamp: new Date(Date.now() - 3600000).toISOString(),
+      channelId: "1"
     },
     {
       id: "2",
       content: "Making good progress! Just fixing some edge cases.",
       user: activeUsers[1],
       timestamp: new Date(Date.now() - 1800000).toISOString(),
+      channelId: "1"
     },
     {
       id: "3",
       content: "Great to hear! Let me know if you need any help with testing.",
       user: activeUsers[0],
       timestamp: new Date(Date.now() - 900000).toISOString(),
+      channelId: "1"
+    },
+    {
+      id: "4",
+      content: "Has anyone started working on the new API endpoints?",
+      user: activeUsers[2],
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      channelId: "2"
+    },
+    {
+      id: "5",
+      content: "Yes, I've begun the initial setup. I'll push my progress to the repo soon.",
+      user: activeUsers[0],
+      timestamp: new Date(Date.now() - 5400000).toISOString(),
+      channelId: "2"
     },
   ]);
 
@@ -101,6 +121,7 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
     { id: "2", name: "development", ownerId: "system" }
   ]);
   const [selectedChannel, setSelectedChannel] = useState<Channel>(channels[0]);
+  const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
 
   const { toast } = useToast()
 
@@ -138,6 +159,20 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredMessages(messages.filter(message => message.channelId === selectedChannel.id));
+    } else {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      const filtered = messages.filter(message => 
+        message.channelId === selectedChannel.id &&
+        (message.content.toLowerCase().includes(lowercasedQuery) ||
+        message.user.name.toLowerCase().includes(lowercasedQuery))
+      );
+      setFilteredMessages(filtered);
+    }
+  }, [searchQuery, messages, selectedChannel]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() && selectedFiles.length === 0) return;
@@ -157,10 +192,11 @@ export default function LiveChat({ currentUser }: { currentUser: User }) {
 
     const message: Message = {
       id: Date.now().toString(),
-      user: currentUser,
+      user: currentUser as ChatUser,
       content: newMessage,
       timestamp: new Date().toISOString(),
-      files: fileAttachments
+      files: fileAttachments,
+      channelId: selectedChannel.id
     };
 
     setMessages([...messages, message]);
@@ -269,11 +305,19 @@ const handleLeaveChannel = (channelId: string) => {
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
-              className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:text-white"
+              className="w-full pl-9 pr-8 py-2 bg-white dark:bg-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:text-white"
               placeholder="Search messages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -399,57 +443,67 @@ const handleLeaveChannel = (channelId: string) => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-2">
-              <div className="space-y-4">
-                {messages.map((message, index) => {
-                  const showAvatar =
-                    index === 0 || messages[index - 1].user.id !== message.user.id;
-                  const isCurrentUser = message.user.id === currentUser.id;
+              {filteredMessages.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredMessages.map((message, index) => {
+                    const showAvatar =
+                      index === 0 || filteredMessages[index - 1].user.id !== message.user.id;
+                    const isCurrentUser = message.user.id === currentUser.id;
 
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex space-x-3 ${
-                        isCurrentUser ? "justify-end" : ""
-                      }`}
-                    >
-                      {!isCurrentUser && showAvatar && (
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={message.user.avatar} alt={message.user.name} />
-                          <AvatarFallback>{message.user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                      )}
-                      <div className={`flex-1 ${isCurrentUser ? "text-right" : ""}`}>
-                        {showAvatar && (
-                          <div className="flex items-baseline space-x-2 mb-1">
-                            <span className="font-medium text-sm dark:text-white">
-                              {message.user.name}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(message.timestamp).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex space-x-3 ${
+                          isCurrentUser ? "justify-end" : ""
+                        }`}
+                      >
+                        {!isCurrentUser && showAvatar && (
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={message.user.avatar} alt={message.user.name} />
+                            <AvatarFallback>{message.user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
                         )}
-                        <div
-                          className={`inline-block rounded-lg px-4 py-2 ${
-                            isCurrentUser
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
-                          }`}
-                        >
-                          {message.content && <p>{message.content}</p>}
-                          {message.files?.map((file, index) => (
-                            <MessageAttachment key={index} file={file} />
-                          ))}
+                        <div className={`flex-1 ${isCurrentUser ? "text-right" : ""}`}>
+                          {showAvatar && (
+                            <div className="flex items-baseline space-x-2 mb-1">
+                              <span className="font-medium text-sm dark:text-white">
+                                {message.user.name}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(message.timestamp).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            className={`inline-block rounded-lg px-4 py-2 ${
+                              isCurrentUser
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
+                            }`}
+                          >
+                            {message.content && <p>{message.content}</p>}
+                            {message.files?.map((file, index) => (
+                              <MessageAttachment key={index} file={file} />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {searchQuery
+                      ? "No messages found matching your search."
+                      : "No messages in this channel yet. Be the first to say hello!"}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Message Input */}
