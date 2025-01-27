@@ -3,7 +3,7 @@
 import * as React from "react";
 import { PanelLeftOpen, PanelLeftClose, Plus} from 'lucide-react';
 import Editor from "@monaco-editor/react";
-
+import { User } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Select,
